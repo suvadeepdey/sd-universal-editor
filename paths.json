@@ -1,8 +1,10 @@
 {
   "mappings": [
-    "/content/aem-boilerplate/:/"
+    "/content/sd-universal-editor/:/",
+    "/content/sd-universal-editor/configuration:/.helix/config.json",
+    "/content/sd-universal-editor/metadata:/metadata.json"
   ],
   "includes": [
-    "/content/aem-boilerplate/"
+    "/content/sd-universal-editor/"
   ]
 }
