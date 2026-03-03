@@ -1,8 +1,6 @@
 {
   "mappings": [
-    "/content/sd-universal-editor/:/",
-    "/content/sd-universal-editor/configuration:/.helix/config.json",
-    "/content/sd-universal-editor/metadata:/metadata.json"
+    "/content/sd-universal-editor/:/"
   ],
   "includes": [
     "/content/sd-universal-editor/"
