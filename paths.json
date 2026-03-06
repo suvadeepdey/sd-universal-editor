@@ -5,6 +5,7 @@
     "/content/sd-universal-editor/metadata:/metadata.json"
   ],
   "includes": [
-    "/content/sd-universal-editor/"
+    "/content/sd-universal-editor/",
+    "/content/dam/sd-universal-editor"
   ]
 }
