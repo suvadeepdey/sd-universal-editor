@@ -1,17 +1,59 @@
-/* blocks/quote/quote.css */
 .block.quote {
-  border-left: 4px solid #1473e6;
-  padding: 1rem 1.25rem;
-  background: #f8fbff;
+    background-color: #ccc;
+    padding: 0 0 24px;
+    display: flex;
+    flex-direction: column;
+    margin: 1rem 0;
 }
 
 .block.quote blockquote {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.25rem;
-  line-height: 1.5;
+    margin: 16px;
+    text-indent: 0;
 }
 
-.block.quote .attribution {
-  font-size: 0.95rem;
-  color: #505050;
+.block.quote > div:last-child > div {
+    margin: 0 16px;
+    font-size: small;
+    font-style: italic;
+    position: relative;
+}
+
+.block.quote > div:last-child > div::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    height: 5px;
+    width: 30px;
+    background-color: darkgray;
+}.block.quote {
+    background-color: #ccc;
+    padding: 0 0 24px;
+    display: flex;
+    flex-direction: column;
+    margin: 1rem 0;
+}
+
+.block.quote blockquote {
+    margin: 16px;
+    text-indent: 0;
+}
+
+.block.quote > div:last-child > div {
+    margin: 0 16px;
+    font-size: small;
+    font-style: italic;
+    position: relative;
+}
+
+.block.quote > div:last-child > div::after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: -8px;
+    height: 5px;
+    width: 30px;
+    background-color: darkgray;
 }
