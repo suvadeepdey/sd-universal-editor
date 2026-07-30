@@ -247,7 +247,6 @@
                     "sling:resourceType": "core/franklin/components/block/v1/block/item",
                     "name": "Card",
                     "model": "card",
-                    "image": "/content/dam/sd-universal-editor/widen-the-talent-pool.png",
                     "text": "<p>Explore This Demo Website - a sample website project used as a reference to highlight AEM's best practices, including Universal Editor with EDS.</p>"
                   }
                 }
