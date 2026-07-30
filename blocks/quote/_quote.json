@@ -1,0 +1,27 @@
+{
+  "definitions": [
+    {
+      "title": "Quote",
+      "id": "quote",
+      "model": "quote"
+    }
+  ],
+  "models": [
+    {
+      "id": "quote",
+      "fields": [
+        {
+          "component": "text",
+          "name": "quoteText",
+          "label": "Quote Text"
+        },
+        {
+          "component": "text",
+          "name": "attribution",
+          "label": "Attribution"
+        }
+      ]
+    }
+  ],
+  "filters": []
+}

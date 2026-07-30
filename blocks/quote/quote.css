@@ -1,0 +1,17 @@
+/* blocks/quote/quote.css */
+.block.quote {
+  border-left: 4px solid #1473e6;
+  padding: 1rem 1.25rem;
+  background: #f8fbff;
+}
+
+.block.quote blockquote {
+  margin: 0 0 0.75rem 0;
+  font-size: 1.25rem;
+  line-height: 1.5;
+}
+
+.block.quote .attribution {
+  font-size: 0.95rem;
+  color: #505050;
+}
