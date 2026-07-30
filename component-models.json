@@ -4916,5 +4916,20 @@
         "valueType": "string"
       }
     ]
+  },
+  {
+    "id": "quote",
+    "fields": [
+      {
+        "component": "text",
+        "name": "quoteText",
+        "label": "Quote Text"
+      },
+      {
+        "component": "text",
+        "name": "attribution",
+        "label": "Attribution"
+      }
+    ]
   }
 ]
