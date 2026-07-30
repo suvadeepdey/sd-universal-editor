@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 Adobe. All rights reserved.
+ * Copyright 2025 Adobe. All rights reserved.
  * This file is licensed to you under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License. You may obtain a copy
  * of the License at http://www.apache.org/licenses/LICENSE-2.0
@@ -16,24 +16,15 @@ function sampleRUM(checkpoint, data) {
   const timeShift = () => (window.performance ? window.performance.now() : Date.now() - window.hlx.rum.firstReadTime);
   try {
     window.hlx = window.hlx || {};
-    if (!window.hlx.rum || !window.hlx.rum.collector) {
-      sampleRUM.enhance = () => {};
-      const params = new URLSearchParams(window.location.search);
-      const { currentScript } = document;
-      const rate = params.get('rum')
-        || window.SAMPLE_PAGEVIEWS_AT_RATE
-        || params.get('optel')
-        || (currentScript && currentScript.dataset.rate);
-      const rateValue = {
-        on: 1,
-        off: 0,
-        high: 10,
-        low: 1000,
-      }[rate];
-      const weight = rateValue !== undefined ? rateValue : 100;
-      const id = (window.hlx.rum && window.hlx.rum.id) || crypto.randomUUID().slice(-9);
-      const isSelected = (window.hlx.rum && window.hlx.rum.isSelected)
-        || (weight > 0 && Math.random() * weight < 1);
+    sampleRUM.enhance = () => {};
+    if (!window.hlx.rum) {
+      const param = new URLSearchParams(window.location.search).get('rum');
+      const weight = (window.SAMPLE_PAGEVIEWS_AT_RATE === 'high' && 10)
+        || (window.SAMPLE_PAGEVIEWS_AT_RATE === 'low' && 1000)
+        || (param === 'on' && 1)
+        || 100;
+      const id = Math.random().toString(36).slice(-4);
+      const isSelected = param !== 'off' && Math.random() * weight < 1;
       // eslint-disable-next-line object-curly-newline, max-len
       window.hlx.rum = {
         weight,
@@ -49,15 +40,13 @@ function sampleRUM(checkpoint, data) {
           const errData = { source: 'undefined error' };
           try {
             errData.target = error.toString();
-            if (error.stack) {
-              errData.source = error.stack
-                .split('\n')
-                .filter((line) => line.match(/https?:\/\//))
-                .shift()
-                .replace(/at ([^ ]+) \((.+)\)/, '$1@$2')
-                .replace(/ at /, '@')
-                .trim();
-            }
+            errData.source = error.stack
+              .split('\n')
+              .filter((line) => line.match(/https?:\/\//))
+              .shift()
+              .replace(/at ([^ ]+) \((.+)\)/, '$1@$2')
+              .replace(/ at /, '@')
+              .trim();
           } catch (err) {
             /* error structure was not as expected */
           }
@@ -80,17 +69,7 @@ function sampleRUM(checkpoint, data) {
           sampleRUM('error', errData);
         });
 
-        window.addEventListener('securitypolicyviolation', (e) => {
-          if (e.blockedURI.includes('helix-rum-enhancer') && e.disposition === 'enforce') {
-            const errData = {
-              source: 'csp',
-              target: e.blockedURI,
-            };
-            sampleRUM.sendPing('error', timeShift(), errData);
-          }
-        });
-
-        sampleRUM.baseURL = sampleRUM.baseURL || new URL(window.RUM_BASE || '/', new URL('https://ot.aem.live'));
+        sampleRUM.baseURL = sampleRUM.baseURL || new URL(window.RUM_BASE || '/', new URL('https://rum.hlx.page'));
         sampleRUM.collectBaseURL = sampleRUM.collectBaseURL || sampleRUM.baseURL;
         sampleRUM.sendPing = (ck, time, pingData = {}) => {
           // eslint-disable-next-line max-len, object-curly-newline
@@ -103,10 +82,10 @@ function sampleRUM(checkpoint, data) {
             ...pingData,
           });
           const urlParams = window.RUM_PARAMS
-            ? new URLSearchParams(window.RUM_PARAMS).toString() || ''
+            ? `?${new URLSearchParams(window.RUM_PARAMS).toString()}`
             : '';
           const { href: url, origin } = new URL(
-            `.rum/${weight}${urlParams ? `?${urlParams}` : ''}`,
+            `.rum/${weight}${urlParams}`,
             sampleRUM.collectBaseURL,
           );
           const body = origin === window.location.origin
@@ -170,6 +149,56 @@ function setup() {
       // eslint-disable-next-line no-console
       console.log(error);
     }
+  }
+}
+
+/**
+ * Protects the AEM Sidekick from being opened by default
+ */
+function hideSidekick() {
+  // Check if URL contains required ZDP parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const hasZdpId = urlParams.has('zdp-id');
+  const hasZdpEnv = urlParams.has('zdp-env');
+  const hasZdpToken = urlParams.has('zdp-token');
+  
+  // Only proceed if all required ZDP parameters are present
+  if (!hasZdpId || !hasZdpEnv || !hasZdpToken) {
+    console.log('ZDP parameters not found, skipping sidekick hiding');
+    return;
+  }
+  
+  const sidekick = document.querySelector('aem-sidekick');
+  
+  if (sidekick) {
+    // Sidekick found, hide it if open
+    if (sidekick.hasAttribute('open')) {
+      console.log('hiding sidekick');
+      sidekick.setAttribute('open', false);
+    }
+  } else {
+    // Sidekick not found yet, watch for it to be added
+    console.log('sidekick not found, watching for it...');
+    
+    const observer = new MutationObserver((mutations, obs) => {
+      const sidekickElement = document.querySelector('aem-sidekick');
+      if (sidekickElement) {
+        console.log('sidekick found by observer, hiding...');
+        if (sidekickElement.hasAttribute('open')) {
+          sidekickElement.setAttribute('open', false);
+        }
+        obs.disconnect(); // Stop observing once found
+      }
+    });
+    
+    // Watch body for added child nodes
+    observer.observe(document.body, {
+      childList: true,
+      subtree: false
+    });
+    
+    // Stop observing after 10 seconds as a safety measure
+    setTimeout(() => observer.disconnect(), 10000);
   }
 }
 
@@ -277,9 +306,15 @@ async function loadCSS(href) {
  */
 async function loadScript(src, attrs) {
   return new Promise((resolve, reject) => {
+    if (!src || src.trim() === '') {
+      resolve();
+      return;
+    }
+
     if (!document.querySelector(`head > script[src="${src}"]`)) {
       const script = document.createElement('script');
       script.src = src;
+      script.async = true;
       if (attrs) {
         // eslint-disable-next-line no-restricted-syntax, guard-for-in
         for (const attr in attrs) {
@@ -287,7 +322,8 @@ async function loadScript(src, attrs) {
         }
       }
       script.onload = resolve;
-      script.onerror = reject;
+      // script.onerror = reject;
+      script.onerror = () => reject(new Error(`Failed to load script: ${src}`));
       document.head.append(script);
     } else {
       resolve();
@@ -322,6 +358,7 @@ function createOptimizedPicture(
   alt = '',
   eager = false,
   breakpoints = [{ media: '(min-width: 600px)', width: '2000' }, { width: '750' }],
+  fetchpriority = null,
 ) {
   const url = new URL(src, window.location.href);
   const picture = document.createElement('picture');
@@ -347,6 +384,9 @@ function createOptimizedPicture(
     } else {
       const img = document.createElement('img');
       img.setAttribute('loading', eager ? 'eager' : 'lazy');
+      if (fetchpriority || eager) {
+        img.setAttribute('fetchpriority', fetchpriority || 'high');
+      }
       img.setAttribute('alt', alt);
       picture.appendChild(img);
       img.setAttribute('src', `${pathname}?width=${br.width}&format=${ext}&optimize=medium`);
@@ -389,7 +429,6 @@ function wrapTextNodes(block) {
     'H4',
     'H5',
     'H6',
-    'HR',
   ];
 
   const wrap = (el) => {
@@ -537,6 +576,78 @@ function decorateSections(main) {
 }
 
 /**
+ * Gets placeholders object.
+ * @param {string} [prefix] Location of placeholders
+ * @returns {object} Window placeholders object
+ */
+async function fetchPlaceholders(prefix = 'default') {
+  window.placeholders = window.placeholders || {};
+  if (!window.placeholders[prefix]) {
+    window.placeholders[prefix] = new Promise((resolve) => {
+      fetch(`${prefix === 'default' ? '' : prefix}/placeholders.json`)
+        .then((resp) => {
+          if (resp.ok) {
+            // Clone the response before reading
+            return resp.clone().json();
+          }
+          return {};
+        })
+        .then((json) => {
+          const placeholders = {};
+          json.data
+            ?.filter((placeholder) => placeholder.Key)
+            .forEach((placeholder) => {
+              placeholders[toCamelCase(placeholder.Key)] = placeholder.Text;
+            });
+          window.placeholders[prefix] = placeholders;
+          resolve(window.placeholders[prefix]);
+        })
+        .catch((error) => {
+          console.error('Error loading placeholders:', error);
+          window.placeholders[prefix] = {};
+          resolve(window.placeholders[prefix]);
+        });
+    });
+  }
+  return window.placeholders[`${prefix}`];
+}
+
+
+/*
+// eslint-disable-next-line import/prefer-default-export
+async function fetchPlaceholders(prefix = 'default') {
+  window.placeholders = window.placeholders || {};
+  if (!window.placeholders[prefix]) {
+    window.placeholders[prefix] = new Promise((resolve) => {
+      fetch(`${prefix === 'default' ? '' : prefix}/placeholders.json`)
+        .then((resp) => {
+          if (resp.ok) {
+            return resp.json();
+          }
+          return {};
+        })
+        .then((json) => {
+          const placeholders = {};
+          json.data
+            .filter((placeholder) => placeholder.Key)
+            .forEach((placeholder) => {
+              placeholders[toCamelCase(placeholder.Key)] = placeholder.Text;
+            });
+          window.placeholders[prefix] = placeholders;
+          resolve(window.placeholders[prefix]);
+        })
+        .catch(() => {
+          // error loading placeholders
+          window.placeholders[prefix] = {};
+          resolve(window.placeholders[prefix]);
+        });
+    });
+  }
+  return window.placeholders[`${prefix}`];
+}
+*/
+
+/**
  * Builds a block DOM Element from a two dimensional array, string, or object
  * @param {string} blockName name of the block
  * @param {*} content two dimensional array or string or object of content
@@ -589,7 +700,7 @@ async function loadBlock(block) {
             }
           } catch (error) {
             // eslint-disable-next-line no-console
-            console.error(`failed to load module for ${blockName}`, error);
+            console.log(`failed to load module for ${blockName}`, error);
           }
           resolve();
         })();
@@ -597,7 +708,7 @@ async function loadBlock(block) {
       await Promise.all([cssLoaded, decorationComplete]);
     } catch (error) {
       // eslint-disable-next-line no-console
-      console.error(`failed to load block ${blockName}`, error);
+      console.log(`failed to load block ${blockName}`, error);
     }
     block.dataset.blockStatus = 'loaded';
   }
@@ -621,7 +732,75 @@ function decorateBlock(block) {
     if (section) section.classList.add(`${shortBlockName}-container`);
     // eslint-disable-next-line no-use-before-define
     decorateButtons(block);
+
+        // Set block ID with shortBlockName and index
+  const blocks = document.querySelectorAll(`.${shortBlockName}`);
+  blocks.forEach((block, index) => {
+    block.id = `${shortBlockName}-${index}`;
+    
+    // Add indexed IDs to images within the block
+    const images = block.querySelectorAll('img');
+    images.forEach((img, imgIndex) => {
+      const imgId = `${shortBlockName}_${index}_image_${imgIndex}`;
+      img.id = imgId;
+    });
+
+    // Skip content ID generation for blocks that handle it themselves (columns, cards, carousel)
+    const blocksWithCustomIDs = ['columns', 'cards', 'carousel'];
+    if (!blocksWithCustomIDs.includes(shortBlockName)) {
+      // Merge headings (h1-h6) and paragraphs into a single loop for efficiency
+      ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p'].forEach((tag) => {
+        const elements = block.querySelectorAll(tag);
+        elements.forEach((el, elIndex) => {
+          el.id = `${shortBlockName}_${index}_${tag}_${elIndex}`;
+        });
+      });
+    }
+  });
   }
+}
+
+/**
+ * Decorates a default block.
+ * @param {Element} block The block element
+ */
+export function decorateDefaultBlock(main) {
+  const sections = main.querySelectorAll('.section');
+  sections.forEach((section, sectionIndex) => {
+    // Find all default-content-wrapper elements in this section
+    const defaultWrappers = section.querySelectorAll('.default-content-wrapper');
+    defaultWrappers.forEach((wrapper, wrapperIndex) => {
+      wrapper.setAttribute('data-section-content-index', `${sectionIndex}_${wrapperIndex}`);
+      
+      // Add IDs to text elements (overwrite any existing IDs)
+      ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'ul', 'ol'].forEach((tag) => {
+        const elements = wrapper.querySelectorAll(tag);
+        let adjustedIndex = 0; // Use a separate counter for adjusted indexing
+        elements.forEach((el) => {
+          // Check if this is a <p> tag containing only an image (picture or img element)
+          if (tag === 'p') {
+            const hasOnlyImage = el.querySelector('picture, img') && 
+                                el.textContent.trim() === '';
+            
+            if (hasOnlyImage) {
+              // Skip ID assignment for <p> tags that only contain images
+              // The image itself will get its own ID separately
+              return; // Skip this element
+            }
+          }
+          
+          el.id = `section_${sectionIndex}_content_${wrapperIndex}_${tag}_${adjustedIndex}`;
+          adjustedIndex++;
+        });
+      });
+    });
+    
+    // Add IDs to images at section level (overwrite any existing IDs)
+    const images = section.querySelectorAll('.default-content-wrapper img');
+    images.forEach((img, imgIndex) => {
+      img.id = `section_${sectionIndex}_image_${imgIndex}`;
+    });
+  });
 }
 
 /**
@@ -665,6 +844,7 @@ async function waitForFirstImage(section) {
   await new Promise((resolve) => {
     if (lcpCandidate && !lcpCandidate.complete) {
       lcpCandidate.setAttribute('loading', 'eager');
+      lcpCandidate.setAttribute('fetchpriority', 'high');
       lcpCandidate.addEventListener('load', resolve);
       lcpCandidate.addEventListener('error', resolve);
     } else {
@@ -690,6 +870,44 @@ async function loadSection(section, loadCallback) {
     if (loadCallback) await loadCallback(section);
     section.dataset.sectionStatus = 'loaded';
     section.style.display = null;
+  }
+}
+
+/**
+ * Updates all section status in a container element.
+ * @param {Element} main The container element
+ */
+function updateSectionsStatus(main) {
+  const sections = [...main.querySelectorAll(':scope > div.section')];
+  for (let i = 0; i < sections.length; i += 1) {
+    const section = sections[i];
+    const status = section.dataset.sectionStatus;
+    if (status !== 'loaded') {
+      const loadingBlock = section.querySelector(
+        '.block[data-block-status="initialized"], .block[data-block-status="loading"]',
+      );
+      if (loadingBlock) {
+        section.dataset.sectionStatus = 'loading';
+        break;
+      } else {
+        section.dataset.sectionStatus = 'loaded';
+        section.style.display = null;
+      }
+    }
+  }
+}
+
+/**
+ * Loads JS and CSS for all blocks in a container element.
+ * @param {Element} main The container element
+ */
+async function loadBlocks(main) {
+  updateSectionsStatus(main);
+  const blocks = [...main.querySelectorAll('div.block')];
+  for (let i = 0; i < blocks.length; i += 1) {
+    // eslint-disable-next-line no-await-in-loop
+    await loadBlock(blocks[i]);
+    updateSectionsStatus(main);
   }
 }
 
@@ -720,14 +938,17 @@ export {
   decorateIcons,
   decorateSections,
   decorateTemplateAndTheme,
+  fetchPlaceholders,
   getMetadata,
   loadBlock,
+  loadBlocks,
   loadCSS,
   loadFooter,
   loadHeader,
   loadScript,
   loadSection,
   loadSections,
+  updateSectionsStatus,
   readBlockConfig,
   sampleRUM,
   setup,
@@ -735,4 +956,5 @@ export {
   toClassName,
   waitForFirstImage,
   wrapTextNodes,
+  hideSidekick
 };

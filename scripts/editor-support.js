@@ -50,9 +50,7 @@ async function applyChanges(event) {
     if (block) {
       const blockResource = block.getAttribute('data-aue-resource');
       const newBlock = parsedUpdate.querySelector(`[data-aue-resource="${blockResource}"]`);
-      if (block.dataset.aueModel === 'form') {
-        return true;
-      } else if (newBlock) {
+      if (newBlock) {
         newBlock.style.display = 'none';
         block.insertAdjacentElement('afterend', newBlock);
         decorateButtons(newBlock);
@@ -113,11 +111,3 @@ async function attachEventListners(main) {
 }
 
 attachEventListners(document.querySelector('main'));
-
-// decorate rich text
-// this has to happen after decorateMain(), and everythime decorateBlocks() is called
-decorateRichtext();
-// in cases where the block decoration is not done in one synchronous iteration we need to listen
-// for new richtext-instrumented elements. this happens for example when using experimentation.
-const observer = new MutationObserver(() => decorateRichtext());
-observer.observe(document, { attributeFilter: ['data-richtext-prop'], subtree: true });
