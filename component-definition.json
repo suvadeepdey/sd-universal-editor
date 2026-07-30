@@ -645,6 +645,11 @@
               }
             }
           }
+        },
+        {
+          "title": "Quote",
+          "id": "quote",
+          "model": "quote"
         }
       ]
     }
