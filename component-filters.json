@@ -18,7 +18,10 @@
       "fragment",
       "form",
       "embed-adaptive-form",
-      "quote"
+      "quote",
+      "teaser",
+      "video",
+      "carousel"
     ]
   },
   {
@@ -31,6 +34,12 @@
     "id": "columns",
     "components": [
       "column"
+    ]
+  },
+  {
+    "id": "carousel",
+    "components": [
+      "card"
     ]
   },
   {
