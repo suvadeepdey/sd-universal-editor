@@ -4918,18 +4918,22 @@
     ]
   },
   {
-    "id": "quote",
-    "fields": [
-      {
-        "component": "text",
-        "name": "quoteText",
-        "label": "Quote Text"
-      },
-      {
-        "component": "text",
-        "name": "attribution",
-        "label": "Attribution"
-      }
-    ]
-  }
+  "id": "quote",
+  "fields": [
+     {
+       "component": "richtext",
+       "name": "quote",
+       "value": "",
+       "label": "Quote",
+       "valueType": "string"
+     },
+     {
+       "component": "text",
+       "valueType": "string",
+       "name": "author",
+       "label": "Author",
+       "value": ""
+     }
+   ]
+}
 ]
