@@ -5,10 +5,49 @@
       "section"
     ]
   },
-  {
-    "...": "./_section.json#/filters"
+   {
+    "id": "section",
+    "components": [
+      "button",
+      "cards",
+      "carousel",
+      "columns",
+      "contentfragment",
+      "dm-asset",
+      "dm-template",
+      "fragment",
+      "hero",
+      "iframe",
+      "image",
+      "search",
+      "teaser",
+      "text",
+      "title",
+      "video"
+    ]
   },
   {
-    "...": "../blocks/*/_*.json#/filters"
+    "id": "cards",
+    "components": [
+      "card"
+    ]
+  },
+  {
+    "id": "columns",
+    "components": [
+      "column"
+    ]
+  },
+  {
+    "id": "column",
+    "components": [
+      "button",
+      "dm-asset",
+      "dm-template",
+      "image",
+      "text",      
+      "title",
+      "video"
+    ]
   }
 ]
