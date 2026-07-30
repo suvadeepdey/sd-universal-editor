@@ -1,59 +1,95 @@
-.block.quote {
-    background-color: #ccc;
-    padding: 0 0 24px;
-    display: flex;
-    flex-direction: column;
-    margin: 1rem 0;
+.quote blockquote {
+  position: relative;
+  margin: 2rem auto;
+  padding: 3rem;
+  max-width: 800px;
+  background-color: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  font-family: Georgia, 'Times New Roman', serif;
 }
 
-.block.quote blockquote {
-    margin: 16px;
-    text-indent: 0;
+@media (width >= 768px) {
+  .quote blockquote {
+    padding: 3.5rem 4rem;
+  }
 }
 
-.block.quote > div:last-child > div {
-    margin: 0 16px;
-    font-size: small;
-    font-style: italic;
-    position: relative;
+@media (width >= 900px) {
+  .quote blockquote {
+    padding: 4rem 5rem;
+  }
 }
 
-.block.quote > div:last-child > div::after {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 0;
-    bottom: -8px;
-    height: 5px;
-    width: 30px;
-    background-color: darkgray;
-}.block.quote {
-    background-color: #ccc;
-    padding: 0 0 24px;
-    display: flex;
-    flex-direction: column;
-    margin: 1rem 0;
+.quote blockquote .quote-quotation {
+  font-size: 1.5rem;
+  line-height: 1.6;
+  color: #9ca3af;
+  margin-bottom: 1.5rem;
+  position: relative;
+  padding-left: 3rem;
 }
 
-.block.quote blockquote {
-    margin: 16px;
-    text-indent: 0;
+@media (width >= 768px) {
+  .quote blockquote .quote-quotation {
+    font-size: 1.75rem;
+  }
 }
 
-.block.quote > div:last-child > div {
-    margin: 0 16px;
-    font-size: small;
-    font-style: italic;
-    position: relative;
+.quote blockquote .quote-quotation > :first-child {
+  text-indent: 0;
 }
 
-.block.quote > div:last-child > div::after {
-    content: "";
-    display: block;
-    position: absolute;
-    left: 0;
-    bottom: -8px;
-    height: 5px;
-    width: 30px;
-    background-color: darkgray;
+.quote blockquote .quote-quotation p {
+  margin: 0;
+}
+
+.quote blockquote .quote-quotation::before {
+  content: '“';
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 8rem;
+  line-height: 0.8;
+  color: var(--main-accent-color);
+  font-weight: 400;
+  position: absolute;
+  top: -18px;
+  left: -5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+.quote blockquote .quote-quotation p:first-child::before {
+  display: none;
+}
+
+.quote blockquote .quote-quotation p:last-child::after {
+  display: none;
+}
+
+.quote blockquote .quote-attribution {
+  text-align: right;
+  font-size: 1.25rem;
+  font-style: italic;
+  color: #5c6370;
+  margin-top: 2rem;
+}
+
+@media (width >= 768px) {
+  .quote blockquote .quote-attribution {
+    font-size: 1.35rem;
+  }
+}
+
+.quote blockquote .quote-attribution p {
+  margin: 0;
+}
+
+.quote blockquote .quote-attribution p:first-child::before {
+  content: '';
+  padding-right: 0;
+}
+
+.quote blockquote .quote-attribution cite {
+  font-style: italic;
+  font-weight: normal;
 }
